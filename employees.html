@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Empleados</title>
+</head>
+<body>
+    <div>
+        <h1>Gestión de Empleados</h1>
+        <button onclick="window.location.href='pos.html'">Volver</button>
+        <button id="addEmployeeBtn">Agregar Empleado</button>
+    </div>
+
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Nombre</th>
+                    <th>Rol</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="employeesTableBody">
+                <!-- Los empleados se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal para agregar/editar empleado -->
+    <div id="employeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid black; width: 300px;">
+            <span class="close" style="float: right; cursor: pointer;">&times;</span>
+            <h2 id="modalTitle">Agregar Empleado</h2>
+            <form id="employeeForm">
+                <input type="hidden" id="employeeId">
+                <div style="margin-bottom: 10px;">
+                    <label for="employeeUsername">Usuario:</label>
+                    <input type="text" id="employeeUsername" required style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label for="employeePassword">Contraseña:</label>
+                    <input type="password" id="employeePassword" required style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label for="employeeName">Nombre:</label>
+                    <input type="text" id="employeeName" required style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label for="employeeRole">Rol:</label>
+                    <select id="employeeRole" required style="width: 100%;">
+                        <option value="1">Admin</option>
+                        <option value="2">Usuario</option>
+                    </select>
+                </div>
+                <button type="submit" style="width: 100%;">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/employees.js"></script>
+</body>
+</html>

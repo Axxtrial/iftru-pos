@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario</title>
+    <link rel="stylesheet" href="css/inventory.css">
+</head>
+<body>
+    <h1>Inventario</h1>
+    <button id="backButton" style="margin-bottom: 20px;" onclick="window.location.href='pos.html'">Volver</button>
+    <div>
+        <button id="addProductBtn" style="margin-bottom: 20px;" onclick="window.location.href='pos.html'">Agregar Producto</button>
+        <div>
+            <input style="margin-bottom: 20px;" type="text" id="searchInput" placeholder="Buscar productos...">
+        </div>
+    </div>
+
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Código de Barras</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryTableBody">
+                <!-- Los productos se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal para agregar/editar producto -->
+    <div id="productModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid black; width: 300px;">
+            <span class="close" style="float: right; cursor: pointer;">&times;</span>
+            <h2 id="modalTitle">Agregar Producto</h2>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                <div style="margin-bottom: 10px;">
+                    <label for="productBarcode">Código de Barras:</label>
+                    <input type="text" id="productBarcode" required style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label for="productName">Nombre:</label>
+                    <input type="text" id="productName" required style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label for="productPrice">Precio:</label>
+                    <input type="number" id="productPrice" step="0.01" required style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label for="productStock">Stock:</label>
+                    <input type="number" id="productStock" required style="width: 100%;">
+                </div>
+                <button type="submit" style="width: 100%;">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/inventory.js"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Ventas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/analytics.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Análisis de Ventas</h1>
+            <button class="back-button" onclick="window.location.href='index.html'">Volver al Inicio</button>
+        </div>
+
+        <div class="chart-container">
+            <h2>Ventas por Día</h2>
+            <canvas id="ventasPorDiaChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h2>Productos Más Vendidos</h2>
+            <canvas id="productosMasVendidosChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h2>Ventas por Hora</h2>
+            <canvas id="ventasPorHoraChart"></canvas>
+        </div>
+    </div>
+
+    <script src="js/analytics.js"></script>
+</body>
+</html>
