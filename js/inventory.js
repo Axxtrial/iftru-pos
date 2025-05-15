@@ -29,16 +29,35 @@ function loadAndDisplayLowStockAlert() {
         });
 }
 
+// Funciones para spinner y confirmación visual
+function mostrarSpinner() {
+    document.getElementById('spinnerGlobal').style.display = 'block';
+}
+function ocultarSpinner() {
+    document.getElementById('spinnerGlobal').style.display = 'none';
+}
+function mostrarConfirmacion(mensaje, esError = false) {
+    const confirmDiv = document.getElementById('confirmacionVisual');
+    confirmDiv.textContent = mensaje;
+    confirmDiv.style.display = 'block';
+    confirmDiv.className = esError ? 'error' : '';
+    setTimeout(() => {
+        confirmDiv.style.display = 'none';
+    }, 2000);
+}
+
 // Función para cargar productos
 function loadProducts() {
+    mostrarSpinner();
     fetch('api/inventory/manage_inventory.php?action=get')
         .then(response => response.json())
         .then(products => {
+            ocultarSpinner();
             displayProducts(products);
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error al cargar los productos');
+            ocultarSpinner();
+            mostrarConfirmacion('Error al cargar los productos', true);
         });
 }
 
@@ -127,37 +146,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función para manejar el envío del formulario
     function handleFormSubmit(e) {
         e.preventDefault();
+        const nombre = document.getElementById('productName').value.trim();
+        const codigo = document.getElementById('productBarcode').value.trim();
+        const precio = parseFloat(document.getElementById('productPrice').value);
+        const stock = parseInt(document.getElementById('productStock').value);
+        let errorMsg = '';
+        if (!nombre) errorMsg = 'El campo nombre es obligatorio';
+        else if (!codigo) errorMsg = 'El campo código de barras es obligatorio';
+        else if (isNaN(precio) || precio <= 0) errorMsg = 'El precio debe ser mayor a 0';
+        else if (isNaN(stock) || stock < 0) errorMsg = 'El stock no puede ser negativo';
+        if (errorMsg) {
+            mostrarConfirmacion(errorMsg, true);
+            return;
+        }
         const formData = new FormData();
         const productId = document.getElementById('productId').value;
-        
-        formData.append('name', document.getElementById('productName').value);
-        formData.append('barcode', document.getElementById('productBarcode').value);
-        formData.append('price', document.getElementById('productPrice').value);
-        formData.append('stock', document.getElementById('productStock').value);
-
+        formData.append('name', nombre);
+        formData.append('barcode', codigo);
+        formData.append('price', precio);
+        formData.append('stock', stock);
         const action = productId ? 'update' : 'add';
         if (productId) {
             formData.append('id', productId);
         }
-
+        mostrarSpinner();
         fetch(`api/inventory/manage_inventory.php?action=${action}`, {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
+            ocultarSpinner();
             if (data.success) {
-                alert(data.message);
+                mostrarConfirmacion('Producto guardado');
                 closeModal();
                 loadProducts();
-                loadAndDisplayLowStockAlert(); // Recargar alerta después de modificar un producto
+                loadAndDisplayLowStockAlert();
             } else {
-                alert(data.message);
+                mostrarConfirmacion(data.message || 'Error al guardar el producto', true);
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error al procesar la solicitud');
+            ocultarSpinner();
+            mostrarConfirmacion('Error al procesar la solicitud', true);
         });
     }
 });
@@ -179,31 +210,30 @@ function editProduct(id) {
         })
         .catch(error => {
             console.error('Error detallado:', error);
-            alert('Error al cargar el producto: ' + error.message);
+            mostrarConfirmacion('Error al cargar el producto: ' + error.message, true);
         });
 }
 
 function deleteProduct(id) {
     if (confirm('¿Está seguro de que desea eliminar este producto?')) {
-        console.log('Intentando eliminar producto con ID:', id);
+        mostrarSpinner();
         fetch(`api/inventory/manage_inventory.php?action=delete&id=${id}`)
             .then(response => {
-                console.log('Respuesta del servidor:', response);
                 return response.json();
             })
             .then(data => {
-                console.log('Datos de respuesta:', data);
+                ocultarSpinner();
                 if (data.success) {
-                    alert(data.message);
+                    mostrarConfirmacion('Producto eliminado');
                     loadProducts();
-                    loadAndDisplayLowStockAlert(); // Recargar alerta después de eliminar un producto
+                    loadAndDisplayLowStockAlert();
                 } else {
-                    throw new Error(data.message || 'Error al eliminar el producto');
+                    mostrarConfirmacion(data.message || 'Error al eliminar el producto', true);
                 }
             })
             .catch(error => {
-                console.error('Error detallado:', error);
-                alert('Error al eliminar el producto: ' + error.message);
+                ocultarSpinner();
+                mostrarConfirmacion('Error al eliminar el producto: ' + error.message, true);
             });
     }
 }

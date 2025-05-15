@@ -53,96 +53,67 @@ function calculateTotal() {
 function generateTicket() {
     const date = new Date();
     let ticketHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title style="color: #000;">Ticket de Venta</title>
-            <style>
-                body {
-                    font-family: 'Courier New', monospace;
-                    width: 80mm;
-                    margin: 0;
-                    padding: 5mm;
-                }
-                .header {
-                    text-align: center;
-                    margin-bottom: 10px;
-                }
-                .items {
-                    margin: 10px 0;
-                    color: #000;
-                }
-                .item {
-                    margin: 5px 0;
-                    border-top: 1px dashed #000;
-                    color: #000;
-                }
-                .total {
-                    text-align: right;
-                    margin-top: 10px;
-                    border-top: 1px dashed #000;
-                    padding-top: 5px;
-                    color: #000;
-                }
-                .footer {
-                    text-align: center;
-                    margin-top: 10px;
-                    border-top: 1px dashed #000;
-                    padding-top: 5px;
-                    color: #000;
-                }
-                @media print {
-                    body {
-                        width: 80mm;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header" style="color: #000;">
-                <h2>MI TIENDA</h2>
-                <p>Ticket de Venta</p>
-                <p>${date.toLocaleString()}</p>
+        <div id="ticketPrintArea" style="width: 80mm; font-family: 'Courier New', monospace; color: #000; font-size: 13px; margin: 0; padding: 0;">
+            <div style="text-align: center; margin-bottom: 8px;">
+                <div style="font-size: 18px; font-weight: bold;">MI TIENDA</div>
+                <div>Ticket de Venta</div>
+                <div>${date.toLocaleString()}</div>
             </div>
+            <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
     `;
-
     let subtotal = 0;
     for (const barcode in cartItems) {
         const item = cartItems[barcode];
         const price = parseFloat(item.price);
         const itemSubtotal = price * item.quantity;
         subtotal += itemSubtotal;
-        
         ticketHTML += `
-            <div class="item">
-                <p>${item.name}</p>
-                <p>${item.quantity} x $${price.toFixed(2)} = $${itemSubtotal.toFixed(2)}</p>
+            <div style="display: flex; justify-content: space-between;">
+                <span>${item.name}</span>
+                <span>x${item.quantity}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span> $${price.toFixed(2)}</span>
+                <span> $${itemSubtotal.toFixed(2)}</span>
             </div>
         `;
     }
-    
     ticketHTML += `
-        <div class="total">
-            <p>Total: $${subtotal.toFixed(2)}</p>
+        <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 15px;">
+            <span>Total:</span>
+            <span>$${subtotal.toFixed(2)}</span>
         </div>
-        <div class="footer">
-            <p>¡Gracias por su compra!</p>
+        <div style="text-align: center; margin-top: 12px;">¡Gracias por su compra!</div>
         </div>
-    </body>
-    </html>
     `;
-
     return ticketHTML;
+}
+
+// Funciones para spinner y confirmación visual
+function mostrarSpinner() {
+    document.getElementById('spinnerGlobal').style.display = 'block';
+}
+function ocultarSpinner() {
+    document.getElementById('spinnerGlobal').style.display = 'none';
+}
+function mostrarConfirmacion(mensaje, esError = false) {
+    const confirmDiv = document.getElementById('confirmacionVisual');
+    confirmDiv.textContent = mensaje;
+    confirmDiv.style.display = 'block';
+    confirmDiv.className = 'confirmacion-visual' + (esError ? ' error' : '');
+    setTimeout(() => {
+        confirmDiv.style.display = 'none';
+    }, 2000);
 }
 
 // Función para completar el pedido
 function completarPedido() {
     if (Object.keys(cartItems).length === 0) {
-        alert('El carrito está vacío');
+        mostrarConfirmacion('El carrito está vacío', true);
         return;
     }
-
-    // Actualizar el stock
+    mostrarSpinner();
     fetch('api/cart/manage_cart.php', {
         method: 'PUT',
         headers: {
@@ -153,11 +124,10 @@ function completarPedido() {
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            alert(data.error);
-            return Promise.reject(data.error); // Rechazar la promesa para detener la cadena
+            ocultarSpinner();
+            mostrarConfirmacion(data.error, true);
+            return Promise.reject(data.error);
         }
-
-        // Registrar la venta
         return fetch('api/analytics/manage_analytics.php?action=registrar_venta', {
             method: 'POST',
             headers: {
@@ -171,68 +141,57 @@ function completarPedido() {
     })
     .then(response => response.json())
     .then(data => {
+        ocultarSpinner();
         if (data.error) {
-            alert(data.error);
-            return Promise.reject(data.error); // Rechazar la promesa para detener la cadena
+            mostrarConfirmacion(data.error, true);
+            return Promise.reject(data.error);
         }
-
-        // Preguntar si se desea imprimir el ticket
-        if (confirm("¿Desea imprimir el ticket?")) {
-            // Obtener el contenedor del ticket
-            const ticketContainer = document.getElementById('ticketContainer');
-            ticketContainer.innerHTML = generateTicket();
-            ticketContainer.style.display = 'block';
-
-            // Imprimir directamente
+        mostrarConfirmacion('¡Venta completada!');
+        // Preguntar si se desea imprimir con QZ Tray o impresión normal
+        const ticketContainer = document.getElementById('ticketContainer');
+        ticketContainer.innerHTML = generateTicket();
+        ticketContainer.style.display = 'block';
+        if (window.qz && confirm('¿Imprimir ticket directamente en la impresora térmica? (Requiere QZ Tray)')) {
+            imprimirConQZTray();
+        } else if (confirm('¿Desea imprimir el ticket?')) {
             window.print();
-
-            // Ocultar el contenedor del ticket después de imprimir
-            ticketContainer.style.display = 'none';
         }
-
-        // Limpiar el carrito después de procesar el pedido (impreso o no)
+        ticketContainer.style.display = 'none';
         limpiarCarrito();
     })
     .catch(error => {
-        console.error('Error:', error);
-        // Evitar mostrar múltiples alertas si el error ya fue manejado y alertado
-        if (typeof error !== 'string' || !error.startsWith("Stock insuficiente") && !error.includes("Producto no encontrado")) {
-            alert('Error al procesar la venta');
+        ocultarSpinner();
+        if (typeof error !== 'string' || (!error.startsWith("Stock insuficiente") && !error.includes("Producto no encontrado"))) {
+            mostrarConfirmacion('Error al procesar la venta', true);
         }
     });
 }
 
 // Función para agregar producto al carrito
 function addProductToCart(barcode) {
+    if (!barcode) {
+        mostrarConfirmacion('El campo código es obligatorio', true);
+        return;
+    }
     const form = document.getElementById('productForm');
     const formData = new FormData(form);
-
+    mostrarSpinner();
     fetch(form.action, {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
+        ocultarSpinner();
         if (data.error) {
-            alert(data.error);
+            mostrarConfirmacion(data.error, true);
             return;
         }
-
-        // Mostrar alerta de stock bajo si es necesario
-        // data.stock es el stock actual en la base de datos ANTES de añadir al carrito esta vez.
         if (data.stock <= LOW_STOCK_THRESHOLD) {
-            // Calculamos el stock que quedaría si solo se considera este item,
-            // para dar una idea más precisa en la notificación si es el último item que lleva al stock bajo.
-            // Sin embargo, la condición principal es data.stock.
             let effectiveStockForNotification = data.stock;
-            // No necesitamos restar la cantidad del carrito aquí para la condición de la alerta,
-            // la alerta es sobre el estado general del stock del producto.
             showLowStockNotification(data.name, effectiveStockForNotification);
         }
-
         const productContainer = document.querySelector('.product-container');
-        
-        // Incrementar el contador para este producto
         if (!cartItems[barcode]) {
             cartItems[barcode] = {
                 barcode: barcode,
@@ -243,8 +202,6 @@ function addProductToCart(barcode) {
         } else {
             cartItems[barcode].quantity++;
         }
-
-        // Actualizar o crear el elemento del producto
         let productItem = document.querySelector(`[data-barcode="${barcode}"]`);
         if (!productItem) {
             productItem = document.createElement('div');
@@ -252,26 +209,21 @@ function addProductToCart(barcode) {
             productItem.setAttribute('data-barcode', barcode);
             productContainer.appendChild(productItem);
         }
-
         const price = parseFloat(cartItems[barcode].price);
         const subtotal = price * cartItems[barcode].quantity;
-
         productItem.innerHTML = `
             <p>Producto: ${data.name}</p>
             <p>Precio C/U: $${price.toFixed(2)}</p>
             <p>Cantidad en carrito: ${cartItems[barcode].quantity}</p>
             <p>Subtotal: $${subtotal.toFixed(2)}</p>
         `;
-        
-        // Actualizar el total del carrito
         calculateTotal();
-        
-        // Limpiar solo el contenido del textarea
+        mostrarConfirmacion('Producto agregado');
         document.getElementById('text_product_name').value = '';
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error al procesar la solicitud');
+        ocultarSpinner();
+        mostrarConfirmacion('Error al procesar la solicitud', true);
     });
 }
 
@@ -296,5 +248,32 @@ document.getElementById('text_product_name').addEventListener('keypress', functi
         }
     }
 });
+
+// Agrego función para imprimir con QZ Tray
+function imprimirConQZTray() {
+    if (!window.qz) {
+        mostrarConfirmacion('QZ Tray no está disponible', true);
+        return;
+    }
+    const ticketContainer = document.getElementById('ticketContainer');
+    const html = ticketContainer.innerHTML;
+    // Convertir HTML a texto plano (simple)
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    let text = tempDiv.innerText;
+    // Configuración básica para QZ Tray
+    qz.websocket.connect().then(() => {
+        return qz.printers.find(); // Usar impresora predeterminada
+    }).then(printer => {
+        const config = qz.configs.create(printer, { encoding: 'UTF-8' });
+        return qz.print(config, [{ type: 'raw', format: 'plain', data: text }]);
+    }).then(() => {
+        mostrarConfirmacion('Ticket enviado a la impresora');
+        qz.websocket.disconnect();
+    }).catch(err => {
+        mostrarConfirmacion('Error al imprimir con QZ Tray: ' + err, true);
+        qz.websocket.disconnect();
+    });
+}
 
 

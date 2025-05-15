@@ -1,9 +1,10 @@
 // Función para cargar los datos de ventas por día
 async function cargarVentasPorDia() {
     try {
+        mostrarSpinner();
         const response = await fetch('api/analytics/manage_analytics.php?action=ventas_por_dia');
         const data = await response.json();
-        
+        ocultarSpinner();
         const ctx = document.getElementById('ventasPorDiaChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
@@ -29,17 +30,20 @@ async function cargarVentasPorDia() {
                 }
             }
         });
+        mostrarConfirmacion('Datos de ventas por día cargados');
     } catch (error) {
-        console.error('Error al cargar ventas por día:', error);
+        ocultarSpinner();
+        mostrarConfirmacion('Error al cargar ventas por día', true);
     }
 }
 
 // Función para cargar los productos más vendidos
 async function cargarProductosMasVendidos() {
     try {
+        mostrarSpinner();
         const response = await fetch('api/analytics/manage_analytics.php?action=productos_mas_vendidos');
         const data = await response.json();
-        
+        ocultarSpinner();
         const ctx = document.getElementById('productosMasVendidosChart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
@@ -66,17 +70,20 @@ async function cargarProductosMasVendidos() {
                 }
             }
         });
+        mostrarConfirmacion('Datos de productos más vendidos cargados');
     } catch (error) {
-        console.error('Error al cargar productos más vendidos:', error);
+        ocultarSpinner();
+        mostrarConfirmacion('Error al cargar productos más vendidos', true);
     }
 }
 
 // Función para cargar las ventas por hora
 async function cargarVentasPorHora() {
     try {
+        mostrarSpinner();
         const response = await fetch('api/analytics/manage_analytics.php?action=ventas_por_hora');
         const data = await response.json();
-        
+        ocultarSpinner();
         const ctx = document.getElementById('ventasPorHoraChart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
@@ -103,9 +110,28 @@ async function cargarVentasPorHora() {
                 }
             }
         });
+        mostrarConfirmacion('Datos de ventas por hora cargados');
     } catch (error) {
-        console.error('Error al cargar ventas por hora:', error);
+        ocultarSpinner();
+        mostrarConfirmacion('Error al cargar ventas por hora', true);
     }
+}
+
+// Funciones para spinner y confirmación visual
+function mostrarSpinner() {
+    document.getElementById('spinnerGlobal').style.display = 'block';
+}
+function ocultarSpinner() {
+    document.getElementById('spinnerGlobal').style.display = 'none';
+}
+function mostrarConfirmacion(mensaje, esError = false) {
+    const confirmDiv = document.getElementById('confirmacionVisual');
+    confirmDiv.textContent = mensaje;
+    confirmDiv.style.display = 'block';
+    confirmDiv.className = 'confirmacion-visual' + (esError ? ' error' : '');
+    setTimeout(() => {
+        confirmDiv.style.display = 'none';
+    }, 2000);
 }
 
 // Cargar todas las gráficas cuando se carga la página

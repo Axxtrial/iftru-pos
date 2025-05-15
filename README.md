@@ -58,3 +58,39 @@ si usas xampp:
 http://localhost
 ```
 #
+
+## Tareas Pendientes para Completar el POS
+
+1. **Autenticación y Seguridad**
+   - Implementar el sistema de login y manejo de sesiones para proteger el acceso al POS.
+   - Añadir control de acceso por roles (por ejemplo, solo admin puede gestionar empleados o inventario).
+
+2. **Validaciones y Manejo de Errores**
+   - Mejorar la validación de formularios tanto en frontend como en backend.
+   - Asegurar mensajes de error claros y manejo de errores en todas las operaciones.
+
+3. **Persistencia del Carrito**
+   - Guardar el carrito en localStorage o en la base de datos para evitar que se pierda al recargar la página.
+
+4. **Impresión de Ticket**
+   - Mejorar la impresión del ticket para soportar impresoras térmicas o exportar a PDF.
+
+5. **Documentación de la API**
+   - Documentar los endpoints de la API: parámetros, respuestas y ejemplos de uso.
+
+6. **Pruebas y Datos de Ejemplo**
+   - Crear scripts de datos de ejemplo para pruebas.
+   - Agregar pruebas automatizadas si es posible.
+
+7. **Mejoras en la Experiencia de Usuario** (Listo)
+   - Agregar indicadores de carga (spinners) y confirmaciones visuales.
+
+8. **Respaldo y Recuperación**
+   - Incluir instrucciones para respaldar y restaurar la base de datos.
+
+## Mejoras Sugeridas
+
+- Optimizar el diseño responsivo para dispositivos móviles.
+- Permitir descuentos y promociones en el POS.
+- Agregar reportes adicionales (por producto, por empleado, etc).
+- Soporte para múltiples cajas o sucursales.
