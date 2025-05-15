@@ -13,6 +13,7 @@
 - MySQL 5.7 o superior
 - Servidor web (Apache/Nginx)
 - Navegador web moderno
+- QZ Tray 
 
 ## Instalación
 
@@ -72,17 +73,13 @@ http://localhost
 3. **Persistencia del Carrito**
    - Guardar el carrito en localStorage o en la base de datos para evitar que se pierda al recargar la página.
 
-4. **Impresión de Ticket**
+4. **Impresión de Ticket** (en camino QZ Tray)
    - Mejorar la impresión del ticket para soportar impresoras térmicas o exportar a PDF.
 
 5. **Documentación de la API**
    - Documentar los endpoints de la API: parámetros, respuestas y ejemplos de uso.
 
-6. **Pruebas y Datos de Ejemplo**
-   - Crear scripts de datos de ejemplo para pruebas.
-   - Agregar pruebas automatizadas si es posible.
-
-7. **Mejoras en la Experiencia de Usuario** (Listo)
+7. **Mejoras en la Experiencia de Usuario** (Listo), FALTA CSS
    - Agregar indicadores de carga (spinners) y confirmaciones visuales.
 
 8. **Respaldo y Recuperación**
