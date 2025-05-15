@@ -1,5 +1,27 @@
 // Objeto para mantener el conteo de productos en el carrito
 const cartItems = {};
+const LOW_STOCK_THRESHOLD = 5; // Umbral para alerta de stock bajo
+
+// Función para mostrar notificación de stock bajo
+function showLowStockNotification(productName, stockLevel) {
+    let notification = document.getElementById('lowStockNotification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'lowStockNotification';
+        notification.className = 'low-stock-notification'; // Estilos definidos en css/pos.css
+        document.body.appendChild(notification);
+    }
+
+    notification.innerHTML = `<strong>¡Stock Bajo!</strong><br>Producto: ${productName}<br>Quedan solo: ${stockLevel} unidades`;
+    notification.style.display = 'block';
+
+    // Ocultar la notificación después de 5 segundos
+    setTimeout(() => {
+        if (notification) { // Verificar si el elemento aún existe
+            notification.style.display = 'none';
+        }
+    }, 5000);
+}
 
 // Función para limpiar el carrito
 function limpiarCarrito() {
@@ -119,7 +141,7 @@ function completarPedido() {
         alert('El carrito está vacío');
         return;
     }
-    
+
     // Actualizar el stock
     fetch('api/cart/manage_cart.php', {
         method: 'PUT',
@@ -132,9 +154,9 @@ function completarPedido() {
     .then(data => {
         if (data.error) {
             alert(data.error);
-            return;
+            return Promise.reject(data.error); // Rechazar la promesa para detener la cadena
         }
-        
+
         // Registrar la venta
         return fetch('api/analytics/manage_analytics.php?action=registrar_venta', {
             method: 'POST',
@@ -151,26 +173,32 @@ function completarPedido() {
     .then(data => {
         if (data.error) {
             alert(data.error);
-            return;
+            return Promise.reject(data.error); // Rechazar la promesa para detener la cadena
         }
-        
-        // Obtener el contenedor del ticket
-        const ticketContainer = document.getElementById('ticketContainer');
-        ticketContainer.innerHTML = generateTicket();
-        ticketContainer.style.display = 'block';
-        
-        // Imprimir directamente
-        window.print();
-        
-        // Limpiar el carrito después de imprimir
+
+        // Preguntar si se desea imprimir el ticket
+        if (confirm("¿Desea imprimir el ticket?")) {
+            // Obtener el contenedor del ticket
+            const ticketContainer = document.getElementById('ticketContainer');
+            ticketContainer.innerHTML = generateTicket();
+            ticketContainer.style.display = 'block';
+
+            // Imprimir directamente
+            window.print();
+
+            // Ocultar el contenedor del ticket después de imprimir
+            ticketContainer.style.display = 'none';
+        }
+
+        // Limpiar el carrito después de procesar el pedido (impreso o no)
         limpiarCarrito();
-        
-        // Ocultar el contenedor del ticket después de imprimir
-        ticketContainer.style.display = 'none';
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al procesar la venta');
+        // Evitar mostrar múltiples alertas si el error ya fue manejado y alertado
+        if (typeof error !== 'string' || !error.startsWith("Stock insuficiente") && !error.includes("Producto no encontrado")) {
+            alert('Error al procesar la venta');
+        }
     });
 }
 
@@ -188,6 +216,18 @@ function addProductToCart(barcode) {
         if (data.error) {
             alert(data.error);
             return;
+        }
+
+        // Mostrar alerta de stock bajo si es necesario
+        // data.stock es el stock actual en la base de datos ANTES de añadir al carrito esta vez.
+        if (data.stock <= LOW_STOCK_THRESHOLD) {
+            // Calculamos el stock que quedaría si solo se considera este item,
+            // para dar una idea más precisa en la notificación si es el último item que lleva al stock bajo.
+            // Sin embargo, la condición principal es data.stock.
+            let effectiveStockForNotification = data.stock;
+            // No necesitamos restar la cantidad del carrito aquí para la condición de la alerta,
+            // la alerta es sobre el estado general del stock del producto.
+            showLowStockNotification(data.name, effectiveStockForNotification);
         }
 
         const productContainer = document.querySelector('.product-container');

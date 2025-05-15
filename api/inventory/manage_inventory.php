@@ -3,6 +3,8 @@ require_once '../../includes/db.php';
 
 header('Content-Type: application/json');
 
+const LOW_STOCK_THRESHOLD = 5;
+
 // Función para obtener todos los productos
 function getProducts() {
     global $conn;
@@ -103,6 +105,21 @@ function deleteProduct($id) {
     return array('success' => false, 'message' => 'Error al eliminar el producto: ' . $conn->error);
 }
 
+// Función para obtener productos con stock bajo
+function getLowStockProducts() {
+    global $conn;
+    $sql = "SELECT id, name, stock FROM products WHERE stock <= " . LOW_STOCK_THRESHOLD . " ORDER BY name ASC";
+    $result = $conn->query($sql);
+    $products = array();
+    
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+    }
+    return $products;
+}
+
 // Manejar las peticiones
 $action = $_GET['action'] ?? '';
 
@@ -131,6 +148,9 @@ switch($action) {
             break;
         }
         echo json_encode(deleteProduct($_GET['id']));
+        break;
+    case 'getLowStock':
+        echo json_encode(getLowStockProducts());
         break;
     default:
         echo json_encode(array('error' => 'Acción no válida'));

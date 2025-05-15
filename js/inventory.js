@@ -2,6 +2,32 @@
 let modal;
 let productForm;
 let inventoryTableBody;
+const LOW_STOCK_THRESHOLD = 5; // Umbral para alerta de stock bajo, igual que en PHP
+
+// Función para cargar y mostrar alerta de stock bajo
+function loadAndDisplayLowStockAlert() {
+    fetch('api/inventory/manage_inventory.php?action=getLowStock')
+        .then(response => response.json())
+        .then(lowStockProducts => {
+            const alertContainer = document.getElementById('lowStockAlertContainer');
+            if (lowStockProducts && lowStockProducts.length > 0) {
+                let productNames = lowStockProducts.map(p => `${p.name} (Stock: ${p.stock})`).join(', ');
+                alertContainer.innerHTML = `<strong>¡Alerta de Stock Bajo!</strong> Los siguientes productos tienen 5 o menos unidades: ${productNames}.`;
+                alertContainer.style.display = 'block';
+            } else {
+                alertContainer.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando alerta de stock bajo:', error);
+            // Opcional: mostrar un error en el contenedor de alerta si falla la carga
+            // const alertContainer = document.getElementById('lowStockAlertContainer');
+            // alertContainer.innerHTML = 'Error al cargar la información de stock bajo.';
+            // alertContainer.style.display = 'block';
+            // alertContainer.style.backgroundColor = 'red'; // O un color de error
+            // alertContainer.style.color = 'white';
+        });
+}
 
 // Función para cargar productos
 function loadProducts() {
@@ -21,6 +47,10 @@ function displayProducts(products) {
     inventoryTableBody.innerHTML = '';
     products.forEach(product => {
         const row = document.createElement('tr');
+        // Aplicar clase si el stock es bajo
+        if (product.stock <= LOW_STOCK_THRESHOLD) {
+            row.classList.add('product-low-stock');
+        }
         row.innerHTML = `
             <td>${product.barcode}</td>
             <td>${product.name}</td>
@@ -68,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cargar productos al iniciar
     loadProducts();
+    loadAndDisplayLowStockAlert(); // Cargar y mostrar alerta de stock bajo
 
     // Event Listeners
     addProductBtn.addEventListener('click', () => openModal());
@@ -119,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert(data.message);
                 closeModal();
                 loadProducts();
+                loadAndDisplayLowStockAlert(); // Recargar alerta después de modificar un producto
             } else {
                 alert(data.message);
             }
@@ -164,6 +196,7 @@ function deleteProduct(id) {
                 if (data.success) {
                     alert(data.message);
                     loadProducts();
+                    loadAndDisplayLowStockAlert(); // Recargar alerta después de eliminar un producto
                 } else {
                     throw new Error(data.message || 'Error al eliminar el producto');
                 }
